@@ -25,36 +25,40 @@ EXPORT_SYMBOL(ThePostOfficeSendPacket);
 
 typedef void (*ThePostOfficeReceivePacketCallback)(u16 NetworkID,u8*data,u16 data_len);
 static ThePostOfficeReceivePacketCallback ThePostOfficeReceivePacketCallbackFunction=NULL;
-
 typedef u16(*ThePostOfficeRegisterPacketCallback)(bool IsVersion6,struct sk_buff*skb,struct net_device*dev);
 static ThePostOfficeRegisterPacketCallback ThePostOfficeRegisterPacketCallbackFunction=NULL;
-//thats not corret spelling
-
 static int ThePostOfficeReceivePacket(struct sk_buff* skb, struct net_device* dev, struct packet_type* pt, struct net_device* orig_dev) {
-    if(!ThePostOfficeRegisterPacketCallbackFunction||!ThePostOfficeReceivePacketCallbackFunction||strcmp(dev->name,"lo")==0||skb->len<14)
+    if(
+        //!ThePostOfficeRegisterPacketCallbackFunction||!ThePostOfficeReceivePacketCallbackFunction||
+        strcmp(dev->name,"lo")==0||skb->len<14)
         return 0; 
     u8*data;
     data=skb_mac_header(skb);
     if(data[0]&2)return 0;
-    u16 ethertype = ntohs(*(u16 *)(data + 12));
-    bool IsVersion6=false;
-    bool DropPacket=false;
-        switch (ethertype)
-        {
+    u16 ethertype = ntohs(*(u16 *)(data + 12)),
+        SourcePort=0,
+        DestinationPort=0;
+    bool IsVersion6=false,
+        DropPacket=false,
+        IsTransmissionControlProtocol=false;
+    switch (ethertype)
+    {
         case 2048:{
             if(data[15]!=69){
                 kfree_skb(skb);
                 return 1;
             }
-            if(data[23]==6){
-
-            }
+            SourcePort = ntohs(*(u16 *)(data + 34));  
+            if((IsTransmissionControlProtocol=(data[23]==6))&&SourcePort==22)return 0;
+            DestinationPort = ntohs(*(u16 *)(data + 36));  
+            break;
         }
         case 34525:{
             IsVersion6=true;
-            if(data[20]==69){
-
-            }
+            SourcePort = ntohs(*(u16 *)(data + 54));
+            if((IsTransmissionControlProtocol=(data[20]==6))&&SourcePort==22)return 0; 
+            DestinationPort = ntohs(*(u16 *)(data + 56));
+            break;   
         }
         default:
             return 0;
@@ -63,7 +67,7 @@ static int ThePostOfficeReceivePacket(struct sk_buff* skb, struct net_device* de
         kfree_skb(skb);
         return 1;
     }
-    ThePostOfficeReceivePacketCallbackFunction(ThePostOfficeRegisterPacketCallbackFunction(IsVersion6,skb,dev),data,skb->len);
+    //ThePostOfficeReceivePacketCallbackFunction(ThePostOfficeRegisterPacketCallbackFunction(IsVersion6,skb,dev),data,skb->len);
     return 0;
 }
 
