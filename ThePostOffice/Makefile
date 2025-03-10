@@ -9,15 +9,22 @@ obj-m := ThePostOffice.o
 all:
 	$(MAKE) -C $(KERNELDIR) M=$(PWD) modules
 
+log:
+	dmesg -w
+
+clear:
+	dmesg -c
+
+
 clean:
 	$(MAKE) -C $(KERNELDIR) M=$(PWD) clean
 
 
 start:
+	make all
 	sudo insmod ThePostOffice.ko
-
+	make log
+	
 stop:
 	sudo rmmod ThePostOffice.ko
-
-log:
-	dmesg -w
+	make clear

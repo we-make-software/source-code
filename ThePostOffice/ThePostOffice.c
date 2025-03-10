@@ -23,52 +23,90 @@ bool ThePostOfficeSendPacket(struct net_device *dev, u8 *packet, u16 packet_len)
 }
 EXPORT_SYMBOL(ThePostOfficeSendPacket);
 
-typedef void (*ThePostOfficeReceivePacketCallback)(u16 NetworkID,u8*data,u16 data_len);
+typedef bool(*ThePostOfficeReceivePacketCallback)(u16 SourcePort,u16 DestinationPort,void*ConnectionIdentifier,u8**data);
 static ThePostOfficeReceivePacketCallback ThePostOfficeReceivePacketCallbackFunction=NULL;
-typedef u16(*ThePostOfficeRegisterPacketCallback)(bool IsVersion6,struct sk_buff*skb,struct net_device*dev);
+typedef bool (*ThePostOfficeRegisterPacketCallback)(
+    struct net_device *dev, 
+    bool IsVersion6, 
+    const u8 *data, 
+    u8 **ToNetworkAddress, 
+    u8 **FromNetworkAddress,
+    void**ConnectionIdentifier
+);
+
 static ThePostOfficeRegisterPacketCallback ThePostOfficeRegisterPacketCallbackFunction=NULL;
 static int ThePostOfficeReceivePacket(struct sk_buff* skb, struct net_device* dev, struct packet_type* pt, struct net_device* orig_dev) {
-    if(
-        //!ThePostOfficeRegisterPacketCallbackFunction||!ThePostOfficeReceivePacketCallbackFunction||
-        strcmp(dev->name,"lo")==0||skb->len<14)
-        return 0; 
+    if(!ThePostOfficeRegisterPacketCallbackFunction||!ThePostOfficeReceivePacketCallbackFunction||strcmp(dev->name,"lo")==0||skb->len<14||skb->pkt_type==PACKET_OUTGOING)
+    return 0; 
     u8*data;
     data=skb_mac_header(skb);
-    if(data[0]&2)return 0;
+    if ((data[0]&2))return 0;
+
     u16 ethertype = ntohs(*(u16 *)(data + 12)),
-        SourcePort=0,
-        DestinationPort=0;
-    bool IsVersion6=false,
-        DropPacket=false,
-        IsTransmissionControlProtocol=false;
+        SourcePort = 0,
+        DestinationPort = 0;
+    bool IsVersion6 = false,
+         IsTransmissionControlProtocol=false;
+    u8 *ToNetworkAddress=NULL,
+       *FromNetworkAddress=NULL; 
     switch (ethertype)
     {
         case 2048:{
-            if(data[15]!=69){
-                kfree_skb(skb);
-                return 1;
-            }
-            SourcePort = ntohs(*(u16 *)(data + 34));  
-            if((IsTransmissionControlProtocol=(data[23]==6))&&SourcePort==22)return 0;
-            DestinationPort = ntohs(*(u16 *)(data + 36));  
+            if(data[14]!=69)goto ForceExit;
+            SourcePort = ntohs(*(u16 *)(data + 36)); 
+            if((IsTransmissionControlProtocol=(data[23]==6))&&SourcePort==22)
+                return 0;
+                DestinationPort =  ntohs(*(u16 *)(data + 34));
+            if(ToNetworkAddress=(u8*)kmalloc(4,GFP_KERNEL))
+                memcpy(ToNetworkAddress,data+26,4);
+            else goto ForceExit;  
+            if(FromNetworkAddress=(u8*)kmalloc(4,GFP_KERNEL))
+                memcpy(FromNetworkAddress,data+30,4);
+            else goto ForceExit;  
             break;
         }
         case 34525:{
-            IsVersion6=true;
-            SourcePort = ntohs(*(u16 *)(data + 54));
-            if((IsTransmissionControlProtocol=(data[20]==6))&&SourcePort==22)return 0; 
-            DestinationPort = ntohs(*(u16 *)(data + 56));
+            if ((data[22] == 254 && (data[23] & 192) == 128) || 
+                (data[38] == 254 && (data[39] & 192) == 128)) 
+                return 0;
+            IsVersion6 = true;
+            if(ToNetworkAddress=(u8*)kmalloc(16,GFP_KERNEL))
+                memcpy(ToNetworkAddress,data+22,16);
+            else goto ForceExit;  
+            if(FromNetworkAddress=(u8*)kmalloc(16,GFP_KERNEL))
+                memcpy(FromNetworkAddress,data+38,16);
+            else goto ForceExit;  
+            SourcePort = ntohs(*(u16 *)(data + 56));
+            if((IsTransmissionControlProtocol=(data[20]==6))&&SourcePort==22)
+                return 0; 
+            DestinationPort =ntohs(*(u16 *)(data + 54)); 
             break;   
         }
         default:
             return 0;
     }
-    if(DropPacket){
-        kfree_skb(skb);
-        return 1;
-    }
-    //ThePostOfficeReceivePacketCallbackFunction(ThePostOfficeRegisterPacketCallbackFunction(IsVersion6,skb,dev),data,skb->len);
-    return 0;
+    void*ConnectionIdentifier=NULL;
+    if(!ThePostOfficeRegisterPacketCallbackFunction(dev,IsVersion6,data,&ToNetworkAddress,&FromNetworkAddress,&ConnectionIdentifier))
+        goto ForceExit;
+        u8* newdata = (u8*)kmalloc(skb->len - (14 + (IsVersion6 ? 37 : 16)), GFP_KERNEL);
+        if (!newdata) goto ForceExit;
+        if (IsVersion6) {
+            memcpy(newdata, data + 14, 6);
+            memcpy(newdata + 6, data + 21, 1); 
+            memcpy(newdata + 7, data + 58, skb->len - 58); 
+        } else {
+            memcpy(newdata, data + 15, 8);
+            memcpy(newdata + 8, data + 38, skb->len - 38);
+        }
+        
+    kfree_skb(skb);
+    if(ThePostOfficeReceivePacketCallbackFunction(&newdata)) return 1;
+    ForceExit:
+    if(ToNetworkAddress)kfree(ToNetworkAddress);
+    if(FromNetworkAddress)kfree(FromNetworkAddress);
+    if(ConnectionIdentifier)kfree(ConnectionIdentifier);
+    kfree_skb(skb);
+    return 1;
 }
 
 
