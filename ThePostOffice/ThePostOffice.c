@@ -6,12 +6,7 @@
 #include <linux/tcp.h>
 #include <linux/ipv6.h>
 static struct packet_type ThePostOfficePacketType;
-
-#include <linux/netdevice.h>
-#include <linux/skbuff.h>
-#include <linux/etherdevice.h>
-
-static bool ThePostOfficeSendPacket(struct net_device *dev, u8 *packet, u16 packet_len) {
+bool ThePostOfficeSendPacket(struct net_device *dev, u8 *packet, u16 packet_len) {
     struct sk_buff*skb;
     skb=netdev_alloc_skb(dev,packet_len+NET_IP_ALIGN);
     if(!skb)return false; 
@@ -26,42 +21,49 @@ static bool ThePostOfficeSendPacket(struct net_device *dev, u8 *packet, u16 pack
     }
     return true; 
 }
+EXPORT_SYMBOL(ThePostOfficeSendPacket);
 
+typedef void (*ThePostOfficeReceivePacketCallback)(u16 NetworkID,u8*data,u16 data_len);
+static ThePostOfficeReceivePacketCallback ThePostOfficeReceivePacketCallbackFunction=NULL;
 
-static void ThePostOfficeSendPacket(struct net_device *dev, u8 *packet, u16 packet_len) {
-    struct sk_buff *skb;
+typedef u16(*ThePostOfficeRegisterPacketCallback)(bool IsVersion6,struct sk_buff*skb,struct net_device*dev);
+static ThePostOfficeRegisterPacketCallback ThePostOfficeRegisterPacketCallbackFunction=NULL;
+//thats not corret spelling
 
-    // Allocate sk_buff (metadata + linear buffer)
-    skb = netdev_alloc_skb(dev, packet_len + NET_IP_ALIGN);
-    if (!skb) return;
+static int ThePostOfficeReceivePacket(struct sk_buff* skb, struct net_device* dev, struct packet_type* pt, struct net_device* orig_dev) {
+    if(!ThePostOfficeRegisterPacketCallbackFunction||!ThePostOfficeReceivePacketCallbackFunction||strcmp(dev->name,"lo")==0||skb->len<14)
+        return 0; 
+    u8*data;
+    data=skb_mac_header(skb);
+    if(data[0]&2)return 0;
+    u16 ethertype = ntohs(*(u16 *)(data + 12));
+    bool IsVersion6=false;
+    bool DropPacket=false;
+        switch (ethertype)
+        {
+        case 2048:{
+            if(data[15]!=69){
+                kfree_skb(skb);
+                return 1;
+            }
+            if(data[23]==6){
 
-    skb_reserve(skb, NET_IP_ALIGN); // Ensure proper alignment
-    skb_put_data(skb, packet, packet_len); // Copy packet into sk_buff
-
-    skb->dev = dev;  // Assign network device
-    skb->protocol = htons(ETH_P_IP);  // Set protocol
-    skb->priority = 0;  // Normal priority
-    dev_queue_xmit(skb);
-}
-
-static int ThePostOfficeReceivePacket(struct sk_buff*skb,struct net_device*dev,struct packet_type*pt,struct net_device*orig_dev){
-    struct iphdr*ip; 
-    struct ipv6hdr*ip6; 
-    struct tcphdr*tcp;
-    if(strcmp(dev->name,"lo")==0)return 0;
-    if(skb->protocol==htons(ETH_P_IP)){
-        ip=ip_hdr(skb);
-        if(ip->protocol==IPPROTO_TCP){
-            tcp=(struct tcphdr *)((__u32 *)ip+ip->ihl);
-            if(ntohs(tcp->dest)==22)return 0;
+            }
         }
-    }else if(skb->protocol==htons(ETH_P_IPV6)){
-        ip6=ipv6_hdr(skb);
-        if(ip6->nexthdr==IPPROTO_TCP){
-            tcp=(struct tcphdr*)(skb_transport_header(skb));
-            if(ntohs(tcp->dest)==22)return 0;
+        case 34525:{
+            IsVersion6=true;
+            if(data[20]==69){
+
+            }
         }
+        default:
+            return 0;
     }
+    if(DropPacket){
+        kfree_skb(skb);
+        return 1;
+    }
+    ThePostOfficeReceivePacketCallbackFunction(ThePostOfficeRegisterPacketCallbackFunction(IsVersion6,skb,dev),data,skb->len);
     return 0;
 }
 
