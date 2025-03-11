@@ -26,7 +26,7 @@ struct InternetProtocolAddressSegmentNext;
 struct InternetProtocolAddressSegmentFirst{
     struct IEEE8021Router*Router;
     u8 Value;
-    struct InternetProtocolAddressSegmentNext*Next;
+    struct InternetProtocolAddressSegmentNext*List;
     struct delayed_work Work;
     struct workqueue_struct*Workqueue;
     struct mutex Mutex;
@@ -73,9 +73,70 @@ static void UpdateTimeIEEE8021Router(struct IEEE8021Router*router){
 
 }
 
+void ProcessInternetProtocolAddressSegmentLastInnerNetwork(struct work_struct *work){
 
+}
 
-struct InternetProtocolAddressSegmentLast* SetInternetProtocolAddressSegmentLastInnerNetwork(struct IEEE8021Router* router,u8 **ToNetworkAddress){
+static struct InternetProtocolAddressSegmentLast* SetInternetProtocolAddressSegmentLastInnerNetwork(struct IEEE8021Router* router, u8 **ToNetworkAddress) {
+    u8 value = (*ToNetworkAddress)[1]; // First byte of the address segment
+    struct InternetProtocolAddressSegmentFirst* Current;
+    Current = router->InternetProtocolAddressSegmentFirst;
+
+    if (!Current) {
+        mutex_lock(&router->InternetProtocolAddressSegmentFirstMutex);
+        Current = kmalloc(sizeof(struct InternetProtocolAddressSegmentFirst), GFP_KERNEL);
+        if (!Current) {
+            mutex_unlock(&router->InternetProtocolAddressSegmentFirstMutex);
+            return NULL;
+        }
+        Current->Workqueue = create_singlethread_workqueue("InternetProtocolAddressSegmentFirstWorkQueue");
+        if (!Current->Workqueue) {
+            kfree(Current);
+            mutex_unlock(&router->InternetProtocolAddressSegmentFirstMutex);
+            return NULL;
+        }
+        mutex_init(&Current->Mutex);
+        Current->Router = router;
+        Current->Value = value;
+        Current->List = NULL; // Initialize the next segment pointer
+        INIT_DELAYED_WORK(&Current->Work, ProcessInternetProtocolAddressSegmentLastInnerNetwork);
+        router->InternetProtocolAddressSegmentFirst = Current;
+        mutex_unlock(&router->InternetProtocolAddressSegmentFirstMutex);
+    } else {
+        mutex_lock(&router->InternetProtocolAddressSegmentFirstMutex);
+
+        if (value != Current->Value) {
+            // If value is different, insert a new first-level segment
+            struct InternetProtocolAddressSegmentFirst* newSegment;
+            newSegment = kmalloc(sizeof(struct InternetProtocolAddressSegmentFirst), GFP_KERNEL);
+            if (!newSegment) {
+                mutex_unlock(&router->InternetProtocolAddressSegmentFirstMutex);
+                return NULL;
+            }
+            newSegment->Workqueue = create_singlethread_workqueue("InternetProtocolAddressSegmentFirstWorkQueue");
+            if (!newSegment->Workqueue) {
+                kfree(newSegment);
+                mutex_unlock(&router->InternetProtocolAddressSegmentFirstMutex);
+                return NULL;
+            }
+            mutex_init(&newSegment->Mutex);
+            newSegment->Router = router;
+            newSegment->Value = value;
+            newSegment->List = NULL; // No next segment yet
+            INIT_DELAYED_WORK(&newSegment->Work, ProcessInternetProtocolAddressSegmentLastInnerNetwork);
+
+            router->InternetProtocolAddressSegmentFirst = newSegment;
+            mutex_unlock(&router->InternetProtocolAddressSegmentFirstMutex);
+            Current = newSegment;
+        } else {
+            mutex_unlock(&router->InternetProtocolAddressSegmentFirstMutex);
+        }
+    }
+
+    // Now process next segment inside Current->List
+    // (You'll need a separate function for this, similar to SetInternetProtocolAddressSegmentNext)
+    
+    kfree(*ToNetworkAddress);
     return NULL;
 }
 
@@ -95,7 +156,8 @@ void ProcessIEEE8021RouterClose(struct work_struct *work){
         while(Current){
             if(!work_pending(&Current->Work.work))
                 mod_delayed_work(Current->Workqueue, &Current->Work, msecs_to_jiffies(0));
-            Current=Current->Next;
+         
+            Current=Current->List;// this is wrong to do.
         }
         mutex_unlock(&router->InternetProtocolAddressSegmentFirstMutex);
         mod_delayed_work(router->Workqueue, &router->Work, msecs_to_jiffies(1000));
@@ -151,7 +213,7 @@ static struct IEEE8021Router*SetIEEE8021Router(const struct IEEE8021NetworkInter
         return NULL;
     }
     INIT_DELAYED_WORK(&Current->Work, ProcessIEEE8021RouterClose);
-    mutex_init(&Current->NetworkInterfaces->RouterMutex);
+    mutex_init(&Current->InternetProtocolAddressSegmentFirstMutex);
     memcpy(Current->MediaAccessControl,Value,6);
     Current->IsVersion6=IsVersion6;
     Current->NetworkInterfaces=interface;
@@ -248,18 +310,7 @@ static struct IEEE8021NetworkInterface* SetIEEE8021NetworkInterface(const u8 Val
     mod_delayed_work(Current->Workqueue, &Current->Work, msecs_to_jiffies(600000));
     return Current;
 }
-static void CloseAllIEEE8021NetworkInterfaces(void){
-    mutex_lock(&IEEE8021NetworkInterfaceMutex);
-    struct IEEE8021NetworkInterface*Current;
-    Current=ThePostOfficeNetworkInterfaces;
-    while(Current){
-        if(!work_pending(&Current->Work.work))
-            mod_delayed_work(Current->Workqueue, &Current->Work, msecs_to_jiffies(0));
-        Current=Current->Prev;
-    }
-    mutex_unlock(&IEEE8021NetworkInterfaceMutex);
-    while(ThePostOfficeNetworkInterfaces)msleep(100);
-}
+
 typedef bool(*ThePostOfficeReceivePacketCallback)(u16 DestinationPort,void*ConnectionIdentifier,u8**data);
 static bool ThePostOfficeRegisterPacketCallbackFunction(
     struct net_device *dev, 
@@ -355,5 +406,10 @@ Setup("ThePostOffice",
     ThePostOfficePacketType.func=ThePostOfficeReceivePacket;
     dev_add_pack(&ThePostOfficePacketType);,
     dev_remove_pack(&ThePostOfficePacketType);
-    CloseAllIEEE8021NetworkInterfaces();
+    mutex_lock(&IEEE8021NetworkInterfaceMutex);
+    for(struct IEEE8021NetworkInterface*Current=ThePostOfficeNetworkInterfaces;Current;Current=Current->Prev)
+        if(!work_pending(&Current->Work.work))
+            mod_delayed_work(Current->Workqueue,&Current->Work,msecs_to_jiffies(0));
+    mutex_unlock(&IEEE8021NetworkInterfaceMutex);
+    for(;ThePostOfficeNetworkInterfaces;msleep(100));
     )
