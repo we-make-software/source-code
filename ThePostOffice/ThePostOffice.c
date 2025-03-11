@@ -88,7 +88,18 @@ void ProcessIEEE8021RouterClose(struct work_struct *work){
         mutex_unlock(&IEEE8021NetworkInterfaceMutex);
         return;
     }
-    //what to do here
+    if(router->InternetProtocolAddressSegmentFirst){
+        mutex_lock(&router->InternetProtocolAddressSegmentFirstMutex);
+        struct InternetProtocolAddressSegmentFirst*Current;
+        Current=router->InternetProtocolAddressSegmentFirst;
+        while(Current){
+            if(!work_pending(&Current->Work.work))
+                mod_delayed_work(Current->Workqueue, &Current->Work, msecs_to_jiffies(0));
+            Current=Current->Next;
+        }
+        mutex_unlock(&router->InternetProtocolAddressSegmentFirstMutex);
+        mod_delayed_work(router->Workqueue, &router->Work, msecs_to_jiffies(1000));
+    }
     if(router->Prev)
         router->Prev->Next=router->Next;
     if(router->Next)
