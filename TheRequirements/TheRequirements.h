@@ -16,5 +16,5 @@
     } \
     module_init(SetupInitProject); \
     module_exit(SetupExitProject);
-
+#define U48_To_U64(value)((u64)(value[0])<<40|(u64)(value[1])<<32|(u64)(value[2])<<24|(u64)(value[3])<<16|(u64)(value[4])<<8|(u64)(value[5])&0xFFFFFFFFFFFF)
 #endif
