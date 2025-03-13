@@ -95,36 +95,8 @@ static void CleanupNetworkAdapters(void){
         ForceCloseExpiryWorkBase(&CurrentAdapter->Expiry);
     mutex_unlock(&NetworkAdaptersMutex);
 }
-void GetNetworkAdapter(const u64 MediaAccessControl,void(*Callback)(struct NetworkAdapter*));
-void GetNetworkAdapter(const u64 MediaAccessControl,void(*Callback)(struct NetworkAdapter*)){
-    mutex_lock(&NetworkAdaptersMutex);
-    struct NetworkAdapter *NetworkAdapter=NULL;
-    for(NetworkAdapter=NetworkAdapters;NetworkAdapter;NetworkAdapter=NetworkAdapter->Prev)
-        if(U48_To_U64(NetworkAdapter->dev->dev_addr)==MediaAccessControl){
-            mutex_unlock(&NetworkAdaptersMutex);
-            if(NetworkAdapter->Expiry.Cancel)return;
-            
-            SetExpiryWorkBase(&NetworkAdapter->Expiry);
-            Callback(NetworkAdapter);
-            return;
-        }
-    mutex_unlock(&NetworkAdaptersMutex);
-}
-EXPORT_SYMBOL(GetNetworkAdapter);
 
-void GetAllNetworkAdapters(void(*Callback)(struct NetworkAdapter*)){
-    mutex_lock(&NetworkAdaptersMutex);
-    if(!NetworkAdapters){
-        mutex_unlock(&NetworkAdaptersMutex);
-        return;
-    }
-    struct NetworkAdapter *networkAdapter=NetworkAdapters;
-    for(;networkAdapter;networkAdapter=networkAdapter->Prev)
-        if(!networkAdapter->Expiry.Cancel)
-            Callback(networkAdapter);
-    mutex_unlock(&NetworkAdaptersMutex);
-}
-EXPORT_SYMBOL(GetAllNetworkAdapters);
+
 static void DeleteNetworkAdapter(void*NetworkAdapter){
     struct NetworkAdapter *CurrentAdapter=(struct NetworkAdapter*)NetworkAdapter;
     mutex_lock(&CurrentAdapter->Expiry.Mutex);
@@ -142,38 +114,7 @@ static void HelpFunctionForGetRouterSetExpiryWorkBase(struct Router*router){
     SetExpiryWorkBase(&router->Expiry);
     SetExpiryWorkBase(&router->NetworkInterfaces->Expiry);
 }
-struct Router *GetRouter(const u8*MediaAccessControl,void(*Callback)(struct Router*)){
-    mutex_lock(&NetworkAdaptersMutex);
-    struct Router *router=NULL;
-    for(router=Routers;router;router=router->Next)
-        if(!memcmp(router->MediaAccessControl,MediaAccessControl,6)){
-            if(router->Expiry.Cancel||router->NetworkInterfaces->Expiry.Cancel){
-                mutex_unlock(&NetworkAdaptersMutex);
-                return NULL;
-            }
-            HelpFunctionForGetRouterSetExpiryWorkBase(router);
-            Callback(router);
-            break;
-        }
-    mutex_unlock(&NetworkAdaptersMutex);    
-    return router;
-}
-EXPORT_SYMBOL(GetRouter);
-void GetAllRouters(const struct NetworkAdapter *NetworkInterfaces,void(*Callback)(struct Router*)){
-    mutex_lock(&NetworkAdaptersMutex);
-    struct Router *router=NetworkInterfaces->Routers;
-    while(router){
-        if(router->Expiry.Cancel||router->NetworkInterfaces->Expiry.Cancel){
-            router=router->Next;
-            continue;
-        }
-        HelpFunctionForGetRouterSetExpiryWorkBase(router);
-        Callback(router);
-        router=router->Next;
-    }
-    mutex_unlock(&NetworkAdaptersMutex);
-}
-EXPORT_SYMBOL(GetAllRouters);
+
 //i made this if other want to do something inside the router i dont know. mabe something.
 
 static void DeleteRouter(void*router){
@@ -184,18 +125,19 @@ static void DeleteRouter(void*router){
 static struct VersionNetworkSegment* HelpFunctionForNetworkSegmentByRouter(struct VersionNetworkSegment*CurrentSegment,struct Router*router);
 struct VersionNetworkSegment{
     struct Router *router;
-    u16*Address;
+    u16*Gateway;
     bool IsVersion6;
-    struct VersionNetworkSegment *Next,*Prev;
     struct ExpiryWorkBase Expiry;
 };
 
 //This is the segment of network for version 4
 struct Version4NetworkSegmentLast {
-    struct VersionNetworkSegment *Data;
+    struct Router *router;
+    u16*Gateway;
+    bool IsVersion6;
+    struct ExpiryWorkBase Expiry;
     u16 Address;
     struct Version4NetworkSegmentLast *Next, *Prev; 
-    struct ExpiryWorkBase Expiry;
 };
 struct Version4NetworkSegmentFirst {
     u16 Address;
@@ -205,44 +147,15 @@ struct Version4NetworkSegmentFirst {
 };
 static struct Version4NetworkSegmentFirst *Version4NetworkSegmentFirst=NULL;
 static DEFINE_MUTEX(Version4NetworkSegmentMutex);
-struct VersionNetworkSegment *GetVersion4NetworkSegment(const u16*Address){
-    if(!Version4NetworkSegmentFirst)return NULL;
-    mutex_lock(&Version4NetworkSegmentMutex);
-    if(!Version4NetworkSegmentFirst){
-        mutex_unlock(&Version4NetworkSegmentMutex);
-        return NULL;
-    }
-    struct Version4NetworkSegmentFirst *CurrentFirst=Version4NetworkSegmentFirst;
-    for(;CurrentFirst&&CurrentFirst->Address!=*Address&&CurrentFirst->Address>*Address;CurrentFirst=CurrentFirst->Next);
-    if(!CurrentFirst||CurrentFirst->Address!=*Address||CurrentFirst->Expiry.Cancel){
-        mutex_unlock(&Version4NetworkSegmentMutex);
-        return NULL;
-    }
-    SetExpiryWorkBase(&CurrentFirst->Expiry);
-    struct Version4NetworkSegmentLast *CurrentLast=CurrentFirst->Last;
-    for(;CurrentLast&&CurrentLast->Address!=*Address&&CurrentLast->Address>*Address;CurrentLast=CurrentLast->Next);
-    if(!CurrentLast||CurrentLast->Address!=*Address||CurrentLast->Expiry.Cancel){
-        mutex_unlock(&Version4NetworkSegmentMutex);
-        return NULL;
-    }
-    mutex_unlock(&Version4NetworkSegmentMutex);
-    SetExpiryWorkBase(&CurrentLast->Expiry);
-    HelpFunctionForGetRouterSetExpiryWorkBase(CurrentLast->Data->router);
-    return CurrentLast->Data;
-}
-EXPORT_SYMBOL(GetVersion4NetworkSegment);
-
-struct VersionNetworkSegment* GetVersion4NetworkSegmentByRouter(const u16*Address,struct Router*router){
-    return Version4NetworkSegmentFirst?HelpFunctionForNetworkSegmentByRouter(GetVersion4NetworkSegment(Address),router):NULL;
-}
 
 //This is the segment of network for version 6
 struct Version6NetworkSegmentLast
-{
-    struct VersionNetworkSegment *Data;
+{   struct Router *router;
+    u16*Gateway;
+    bool IsVersion6;
+    struct ExpiryWorkBase Expiry;
     u64 Address;
     struct Version6NetworkSegmentLast *Next,*Prev;
-    struct ExpiryWorkBase Expiry;
 };
 struct Version6NetworkSegmentFirst {
     u64 Address;
@@ -252,83 +165,18 @@ struct Version6NetworkSegmentFirst {
 };
 static struct Version6NetworkSegmentFirst *Version6NetworkSegmentFirst=NULL;
 static DEFINE_MUTEX(Version6NetworkSegmentMutex);
-struct VersionNetworkSegment *GetVersion6NetworkSegment(const u16*Address){
-    if(!Version6NetworkSegmentFirst)return NULL;
-    mutex_lock(&Version6NetworkSegmentMutex);
-    if(!Version6NetworkSegmentFirst){
-        mutex_unlock(&Version6NetworkSegmentMutex);
-        return NULL;
-    }
-    struct Version6NetworkSegmentFirst *CurrentFirst=Version6NetworkSegmentFirst;
-    const u64* FirstAddress = (const u64*) Address;
-    for(;CurrentFirst&&CurrentFirst->Address!=*FirstAddress&&CurrentFirst->Address>*FirstAddress;CurrentFirst=CurrentFirst->Next);
-    if(!CurrentFirst||CurrentFirst->Address!=*FirstAddress||CurrentFirst->Expiry.Cancel){
-        mutex_unlock(&Version6NetworkSegmentMutex);
-        return NULL;
-    }
-    SetExpiryWorkBase(&CurrentFirst->Expiry);
-    struct Version6NetworkSegmentLast *CurrentLast=CurrentFirst->Last;
-    const u64* LastAddress=(const u64*)(Address+4); 
 
-    for(;CurrentLast&&CurrentLast->Address!=*LastAddress&&CurrentLast->Address>*LastAddress;CurrentLast=CurrentLast->Next);
-    if(!CurrentLast||CurrentLast->Address!=*LastAddress||CurrentLast->Expiry.Cancel){
-        mutex_unlock(&Version6NetworkSegmentMutex);
-        return NULL;
-    }
-    mutex_unlock(&Version6NetworkSegmentMutex);
-    SetExpiryWorkBase(&CurrentLast->Expiry);
-    HelpFunctionForGetRouterSetExpiryWorkBase(CurrentLast->Data->router);
-    return CurrentLast->Data;
-}
-EXPORT_SYMBOL(GetVersion6NetworkSegment);
-
-struct VersionNetworkSegment* GetVersion6NetworkSegmentByRouter(const u16*Address,struct Router*router){
-    return Version6NetworkSegmentFirst?HelpFunctionForNetworkSegmentByRouter(GetVersion6NetworkSegment(Address),router):NULL;
-}
 // Mix function for the segment of network
 static void HelpFunctionForNetworkSegmentByRouterSetExpiryWorkBase(struct VersionNetworkSegment*CurrentSegment){
     if(!CurrentSegment)return;
     SetExpiryWorkBase(&CurrentSegment->Expiry);
     HelpFunctionForGetRouterSetExpiryWorkBase(CurrentSegment->router);
 }
-static struct VersionNetworkSegment* HelpFunctionForNetworkSegmentByRouter(struct VersionNetworkSegment*CurrentSegment,struct Router*router){
-    if(!CurrentSegment)return NULL;
-    mutex_lock(&router->Expiry.Mutex);
-    if(CurrentSegment->router==router){
-        mutex_unlock(&router->Expiry.Mutex);
-        if(!CurrentSegment->router->Expiry.Cancel){
-            HelpFunctionForNetworkSegmentByRouterSetExpiryWorkBase(CurrentSegment);
-            return CurrentSegment;
-        }
-        return NULL;
-    }
-    for(CurrentSegment=CurrentSegment->Next;CurrentSegment;CurrentSegment=CurrentSegment->Next)
-        if(CurrentSegment->router==router){
-            mutex_unlock(&router->Expiry.Mutex);
-            if(!CurrentSegment->router->Expiry.Cancel){
-                HelpFunctionForNetworkSegmentByRouterSetExpiryWorkBase(CurrentSegment);
-                return CurrentSegment;
-            }
-            return NULL;
-        }
-    for(CurrentSegment=CurrentSegment->Prev;CurrentSegment;CurrentSegment=CurrentSegment->Prev)
-        if(CurrentSegment->router==router){
-            mutex_unlock(&router->Expiry.Mutex);
-            if(!CurrentSegment->router->Expiry.Cancel){
-                HelpFunctionForNetworkSegmentByRouterSetExpiryWorkBase(CurrentSegment);
-                return CurrentSegment;
-            }
-            return NULL;
-        }
-    mutex_unlock(&router->Expiry.Mutex);
-    return NULL;
-}
-struct VersionNetworkSegment *GetVersionNetworkSegment(const u16*Address,bool IsVersion6){
-    return (IsVersion6?GetVersion6NetworkSegment:GetVersion4NetworkSegment)(Address);
-}
-EXPORT_SYMBOL(GetVersionNetworkSegment);
+
+
+;
 //Server
-static struct VersionNetworkSegment*Server=NULL;
+static struct VersionNetworkSegment*Server=NULL,*Client=NULL;
 
 //This is the packet Receive function
 static int ThePostOfficeReceivePacket(struct sk_buff*skb,struct net_device*dev,struct packet_type*pt,struct net_device*orig_dev){
