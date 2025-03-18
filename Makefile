@@ -23,12 +23,9 @@ commit:
 	git add .
 	git commit -m "Updated main repository"
 	git push origin main
-	
+
 submodule:
 	git submodule add https://github.com/we-make-software/$(name).git $(name)
-	git add .
-	git commit -m "Updated main repository"
-	git push origin main
-
+	make commit
 
 
