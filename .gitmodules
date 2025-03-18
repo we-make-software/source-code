@@ -10,3 +10,6 @@
 [submodule "KernelTest"]
 	path = KernelTest
 	url = https://github.com/we-make-software/KernelTest.git
+[submodule "TheMailConditioner"]
+	path = TheMailConditioner
+	url = https://github.com/we-make-software/TheMailConditioner.git
