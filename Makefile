@@ -2,10 +2,10 @@ BRANCH = main
 COMMIT_MSG = Update on $(shell date '+%Y-%m-%d %H:%M:%S')
 all:
 	$(MAKE) -C ExpiryWorkBase start
-	$(MAKE) -C ThePostOffice start
+	$(MAKE) -C TheMailConditioner start
 
 stop:
-	$(MAKE) -C ThePostOffice stop
+	$(MAKE) -C TheMailConditioner stop
 	$(MAKE) -C ExpiryWorkBase stop
 
 log:
@@ -15,7 +15,7 @@ clear:
 	dmesg -C
 
 pull:
-	$(MAKE) -C ThePostOffice pull
+	$(MAKE) -C ThePosTheMailConditioner pull
 	$(MAKE) -C ExpiryWorkBase pull
 	git pull origin main --rebase
 
@@ -29,3 +29,6 @@ submodule:
 	make commit
 
 
+hard:
+	git reset --hard origin/main
+	git push origin main --force
