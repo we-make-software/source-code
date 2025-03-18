@@ -30,5 +30,4 @@ submodule:
 
 
 hard:
-	git reset --hard origin/main
 	git push origin main --force
