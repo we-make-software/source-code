@@ -1,26 +1,31 @@
-# Kernel version
-KERNELDIR ?= /lib/modules/$(shell uname -r)/build
-PWD := $(shell pwd)
+BRANCH = main
 COMMIT_MSG = Update on $(shell date '+%Y-%m-%d %H:%M:%S')
-obj-m := KernelTest.o
 all:
-	$(MAKE) -C $(KERNELDIR) M=$(PWD) modules
-
-
-
-clean:
-	$(MAKE) -C $(KERNELDIR) M=$(PWD) clean
-
-
-start:
-	make all
-	sudo insmod KernelTest.ko
+	$(MAKE) -C ExpiryWorkBase start
+	$(MAKE) -C TheMailConditioner start
+	$(MAKE) -C ThePostOffice start
 
 stop:
-	sudo rmmod KernelTest.ko
-	make clean
+	$(MAKE) -C ThePostOffice stop
+	$(MAKE) -C TheMailConditioner stop
+	$(MAKE) -C ExpiryWorkBase stop
+
+log:
+	dmesg -w
+
+clear:
+	dmesg -C
+
+pull:
+	$(MAKE) -C ThePostOffice pull
+	$(MAKE) -C TheMailConditioner pull
+	$(MAKE) -C ExpiryWorkBase pull
+	git pull origin main --rebase
 
 commit:
+	$(MAKE) -C ThePostOffice commit
+	$(MAKE) -C TheMailConditioner commit
+	$(MAKE) -C ExpiryWorkBase commit
 	@if ! git diff-index --quiet HEAD; then \
 		git add . && \
 		git commit -m "$(COMMIT_MSG)" && \
@@ -28,5 +33,3 @@ commit:
 	else \
 		echo "No changes in $(PWD) to commit."; \
 	fi
-pull:
-	git pull origin main --rebase
