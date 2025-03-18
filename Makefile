@@ -20,19 +20,15 @@ pull:
 	git pull origin main --rebase
 
 commit:
-	$(MAKE) -C ThePostOffice commit
-	$(MAKE) -C ExpiryWorkBase commit
-	$(MAKE) -C TheBenchmarks 
-	$(MAKE) -C TheMailConditioner commit
-	@if ! git diff-index --quiet HEAD; then \
-		git add . && \
-		git commit -m "$(COMMIT_MSG)" && \
-		git push origin main; \
-	else \
-		echo "No changes in $(PWD) to commit."; \
-	fi
-
+	git add .
+	git commit -m "Updated main repository"
+	git push origin main
+	
 submodule:
 	git submodule add https://github.com/we-make-software/$(name).git $(name)
+	git add .
+	git commit -m "Updated main repository"
+	git push origin main
+
 
 
