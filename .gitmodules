@@ -1,0 +1,9 @@
+[submodule "ExpiryWorkBase"]
+	path = ExpiryWorkBase
+	url = https://github.com/we-make-software/ExpiryWorkBase.git
+[submodule "ThePostOffice"]
+	path = ThePostOffice
+	url = https://github.com/we-make-software/ThePostOffice.git
+[submodule "TheRequirements"]
+	path = TheRequirements
+	url = https://github.com/we-make-software/TheRequirements.git
