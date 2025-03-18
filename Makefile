@@ -22,6 +22,8 @@ pull:
 commit:
 	$(MAKE) -C ThePostOffice commit
 	$(MAKE) -C ExpiryWorkBase commit
+	$(MAKE) -C TheBenchmarks 
+	$(MAKE) -C TheMailConditioner commit
 	@if ! git diff-index --quiet HEAD; then \
 		git add . && \
 		git commit -m "$(COMMIT_MSG)" && \
@@ -30,5 +32,7 @@ commit:
 		echo "No changes in $(PWD) to commit."; \
 	fi
 
-#git submodule add https://github.com/we-make-software/TheCheckPoint.git TheCheckPoint
+submodule:
+	git submodule add https://github.com/we-make-software/$(name).git $(name)
+
 
