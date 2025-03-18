@@ -7,3 +7,6 @@
 [submodule "TheRequirements"]
 	path = TheRequirements
 	url = https://github.com/we-make-software/TheRequirements.git
+[submodule "KernelTest"]
+	path = KernelTest
+	url = https://github.com/we-make-software/KernelTest.git
