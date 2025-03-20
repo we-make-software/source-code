@@ -22,4 +22,7 @@
 [submodule "TheRequirements_0_1"]
 	path = TheRequirements_0_1
 	url = https://github.com/we-make-software/TheRequirements_0_1.git
+[submodule "TheMaintainer"]
+	path = TheMaintainer
+	url = https://github.com/we-make-software/TheMaintainer.git
 
