@@ -38,7 +38,6 @@ pull:
 	git pull origin main --rebase
 
 commit:
-	$(MAKE) -C ExpiryWorkBase commit
 	$(MAKE) -C TheMailConditioner commit
 	$(MAKE) -C TheRequirements_0_1 commit
 	$(MAKE) -C TheRequirements_0_2 commit
