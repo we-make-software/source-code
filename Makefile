@@ -4,12 +4,17 @@ all:
 	$(MAKE) -C ExpiryWorkBase start
 	$(MAKE) -C TheMailConditioner start
 	$(MAKE) -C ThePostOffice start
+	$(MAKE) -C TheMaintainer start
+	
+
 clean:
 	$(MAKE) -C ExpiryWorkBase clean
 	$(MAKE) -C TheMailConditioner clean
 	$(MAKE) -C ThePostOffice clean
+	$(MAKE) -C TheMaintainer clean
 
 stop:
+	$(MAKE) -C TheMaintainer stop
 	$(MAKE) -C ThePostOffice stop
 	$(MAKE) -C TheMailConditioner stop
 	$(MAKE) -C ExpiryWorkBase stop
@@ -22,6 +27,9 @@ clear:
 	dmesg -C
 
 pull:
+	$(MAKE) -C TheMailConditioner pull
+	$(MAKE) -C ThePostOffice pull
+	$(MAKE) -C TheMaintainer pull
 	$(MAKE) -C ThePosTheMailConditioner pull
 	$(MAKE) -C ExpiryWorkBase pull
 	git pull origin main --rebase
@@ -30,6 +38,7 @@ commit:
 	$(MAKE) -C ExpiryWorkBase commit
 	$(MAKE) -C TheMailConditioner commit
 	$(MAKE) -C ThePostOffice commit
+	$(MAKE) -C TheMaintainer commit
 	git add .
 	git commit -m "Updated main repository"
 	git push origin main
@@ -44,7 +53,3 @@ hard:
 restart:
 	@$(MAKE) clean
 	@sudo reboot	
-
-build:make all
-
-unbuild:make stop
