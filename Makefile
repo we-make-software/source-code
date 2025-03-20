@@ -33,11 +33,16 @@ pull:
 	$(MAKE) -C ThePosTheMailConditioner pull
 	$(MAKE) -C ExpiryWorkBase pull
 	$(MAKE) -C TheRequirements_0_1 pull
-	
+	$(MAKE) -C TheRequirements_0_2 pull
+	$(MAKE) -C TheRequirements_0_3 pull	
 	git pull origin main --rebase
 
 commit:
+	$(MAKE) -C ExpiryWorkBase commit
+	$(MAKE) -C TheMailConditioner commit
 	$(MAKE) -C TheRequirements_0_1 commit
+	$(MAKE) -C TheRequirements_0_2 commit
+	$(MAKE) -C TheRequirements_0_3 commit
 	$(MAKE) -C ThePostOffice commit
 	$(MAKE) -C TheMaintainer commit
 	git add .
