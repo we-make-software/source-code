@@ -16,9 +16,6 @@
 [submodule "KernelTest"]
 	path = KernelTest
 	url = https://github.com/we-make-software/KernelTest.
-[submodule "TheBenchmarks"]
-	path = TheBenchmarks
-	url = https://github.com/we-make-software/TheBenchmarks.git
 [submodule "TheRequirements_0_1"]
 	path = TheRequirements_0_1
 	url = https://github.com/we-make-software/TheRequirements_0_1.git
