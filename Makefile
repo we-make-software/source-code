@@ -43,7 +43,7 @@ hard:
 
 restart:
 	@$(MAKE) clean
-	@sudo reboo	
+	@sudo reboot	
 
 build:make all
 
