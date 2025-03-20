@@ -51,7 +51,7 @@ What's next?
            style="border: 3px solid black; border-radius: 10px; padding: 5px;">
     </td>
     <td>
-      <strong>Role:</strong> ThePostOffice<br>
+      <strong>Role:</strong> TheMaintainer<br>
     </td>
   </tr>
 </table>
