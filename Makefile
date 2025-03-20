@@ -35,7 +35,6 @@ pull:
 	git pull origin main --rebase
 
 commit:
-	$(MAKE) -C ExpiryWorkBase commit
 	$(MAKE) -C TheMailConditioner commit
 	$(MAKE) -C ThePostOffice commit
 	$(MAKE) -C TheMaintainer commit
