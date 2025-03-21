@@ -29,8 +29,8 @@ pull:
 	$(MAKE) -C TheMailConditioner pull
 	$(MAKE) -C ThePostOffice pull
 	$(MAKE) -C TheMaintainer pull
-	$(MAKE) -C ThePosTheMailConditioner pull
 	$(MAKE) -C ExpiryWorkBase pull
+	$(MAKE) -C TheRequirements pull
 	git pull origin main --rebase
 
 commit:
