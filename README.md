@@ -38,6 +38,16 @@ What's next?
       <strong>Role:</strong> TheMaintainer<br>
     </td>
   </tr>
+    </tr>
+    <tr style="border: none;">
+    <td>
+      <img src="https://github.com/we-make-software/TheRouter/blob/main/profile.png" alt="Worker Profile" width="150" 
+           style="border: 3px solid black; border-radius: 10px; padding: 5px;">
+    </td>
+    <td>
+      <strong>Role:</strong> TheRouter<br>
+    </td>
+  </tr>
   <tr style="border: none;">
     <td>
       <img src="https://github.com/we-make-software/ThePostOffice/blob/main/profile.png" alt="Worker Profile" width="150" 
