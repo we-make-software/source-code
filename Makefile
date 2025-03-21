@@ -1,8 +1,8 @@
 BRANCH = main
 COMMIT_MSG = Update on $(shell date '+%Y-%m-%d %H:%M:%S')
 all:
-	$(MAKE) -C ExpiryWorkBase start
 	$(MAKE) -C TheMailConditioner start
+	$(MAKE) -C ExpiryWorkBase start
 	$(MAKE) -C ThePostOffice start
 	$(MAKE) -C TheMaintainer start
 	
@@ -10,12 +10,12 @@ all:
 clean:
 	$(MAKE) -C ExpiryWorkBase clean
 	$(MAKE) -C TheMailConditioner clean
-	$(MAKE) -C ThePostOffice clean
 	$(MAKE) -C TheMaintainer clean
+	$(MAKE) -C ThePostOffice clean
 
 stop:
-	$(MAKE) -C TheMaintainer stop
 	$(MAKE) -C ThePostOffice stop
+	$(MAKE) -C TheMaintainer stop
 	$(MAKE) -C TheMailConditioner stop
 	$(MAKE) -C ExpiryWorkBase stop
 	make clean
@@ -33,15 +33,11 @@ pull:
 	$(MAKE) -C ThePosTheMailConditioner pull
 	$(MAKE) -C ExpiryWorkBase pull
 	$(MAKE) -C TheRequirements_0_1 pull
-	$(MAKE) -C TheRequirements_0_2 pull
-	$(MAKE) -C TheRequirements_0_3 pull	
 	git pull origin main --rebase
 
 commit:
 	$(MAKE) -C TheMailConditioner commit
 	$(MAKE) -C TheRequirements_0_1 commit
-	$(MAKE) -C TheRequirements_0_2 commit
-	$(MAKE) -C TheRequirements_0_3 commit
 	$(MAKE) -C ThePostOffice commit
 	$(MAKE) -C TheMaintainer commit
 	git add .

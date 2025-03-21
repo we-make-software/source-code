@@ -29,6 +29,15 @@ What's next?
       <strong>Role:</strong> TheMailConditioner<br>
     </td>
   </tr>
+    <tr style="border: none;">
+    <td>
+      <img src="https://github.com/we-make-software/TheMaintainer/blob/main/profile.png" alt="Worker Profile" width="150" 
+           style="border: 3px solid black; border-radius: 10px; padding: 5px;">
+    </td>
+    <td>
+      <strong>Role:</strong> TheMaintainer<br>
+    </td>
+  </tr>
   <tr style="border: none;">
     <td>
       <img src="https://github.com/we-make-software/ThePostOffice/blob/main/profile.png" alt="Worker Profile" width="150" 
@@ -36,15 +45,6 @@ What's next?
     </td>
     <td>
       <strong>Role:</strong> ThePostOffice<br>
-    </td>
-  </tr>
-  <tr style="border: none;">
-    <td>
-      <img src="https://github.com/we-make-software/TheMaintainer/blob/main/profile.png" alt="Worker Profile" width="150" 
-           style="border: 3px solid black; border-radius: 10px; padding: 5px;">
-    </td>
-    <td>
-      <strong>Role:</strong> TheMaintainer<br>
     </td>
   </tr>
 </table>
