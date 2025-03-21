@@ -19,4 +19,6 @@
 [submodule "TheMaintainer"]
 	path = TheMaintainer
 	url = https://github.com/we-make-software/TheMaintainer.git
-
+[submodule "TheRouter"]
+	path = TheRouter
+	url = https://github.com/we-make-software/TheRouter.git

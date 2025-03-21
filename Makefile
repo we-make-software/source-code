@@ -42,9 +42,10 @@ commit:
 	git commit -m "Updated main repository"
 	git push origin main
 
-submodule:
+new:
 	git submodule add https://github.com/we-make-software/$(name).git $(name)
 	make commit
+	echo '[submodule "$(name)"]\n\tpath = $(name)\n\turl = https://github.com/we-make-software/$(name).git' >> .gitmodules
 
 hard:
 	git push origin main --force
