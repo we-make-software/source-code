@@ -3,9 +3,8 @@ COMMIT_MSG = Update on $(shell date '+%Y-%m-%d %H:%M:%S')
 all:
 	$(MAKE) -C ExpiryWorkBase start
 	$(MAKE) -C TheMailConditioner start
-	$(MAKE) -C ThePostOffice start
 	$(MAKE) -C TheMaintainer start
-	
+	$(MAKE) -C ThePostOffice start
 
 clean:
 	$(MAKE) -C ThePostOffice clean	

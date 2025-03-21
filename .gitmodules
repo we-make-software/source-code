@@ -19,7 +19,4 @@
 [submodule "TheMaintainer"]
 	path = TheMaintainer
 	url = https://github.com/we-make-software/TheMaintainer.git
-[submodule "InternalDeliveryGuy"]
-	path = InternalDeliveryGuy
-	url = https://github.com/we-make-software/InternalDeliveryGuy.git
 
