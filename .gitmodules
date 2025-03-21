@@ -16,9 +16,9 @@
 [submodule "KernelTest"]
 	path = KernelTest
 	url = https://github.com/we-make-software/KernelTest.
-[submodule "TheMaintainer"]
-	path = TheMaintainer
-	url = https://github.com/we-make-software/TheMaintainer.git
 [submodule "TheRouter"]
 	path = TheRouter
 	url = https://github.com/we-make-software/TheRouter.git
+[submodule "TheMaintainer"]
+	path = TheMaintainer
+	url = https://github.com/we-make-software/TheMaintainer.git
