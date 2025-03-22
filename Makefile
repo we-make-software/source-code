@@ -4,12 +4,14 @@ all:
 	$(MAKE) -C ExpiryWorkBase start
 	$(MAKE) -C TheMailConditioner start
 	$(MAKE) -C TheMaintainer start
+	$(MAKE) -C TheNetworkAdapter start
 	$(MAKE) -C TheRouter start
 	$(MAKE) -C ThePostOffice start
 
 clean:
 	$(MAKE) -C ThePostOffice clean	
 	$(MAKE) -C TheRouter clean
+	$(MAKE) -C TheNetworkAdapter clean
 	$(MAKE) -C TheMaintainer clean
 	$(MAKE) -C TheMailConditioner clean
 	$(MAKE) -C ExpiryWorkBase clean
@@ -17,6 +19,7 @@ clean:
 stop:
 	$(MAKE) -C ThePostOffice stop
 	$(MAKE) -C TheRouter stop
+	$(MAKE) -C TheNetworkAdapter stop
 	$(MAKE) -C TheMaintainer stop
 	$(MAKE) -C TheMailConditioner stop
 	$(MAKE) -C ExpiryWorkBase stop
@@ -35,6 +38,7 @@ pull:
 	$(MAKE) -C ExpiryWorkBase pull
 	$(MAKE) -C TheRequirements pull
 	$(MAKE) -C TheRouter pull
+	$(MAKE) -C TheNetworkAdapter pull
 	git pull origin main --rebase
 
 commit:
@@ -43,6 +47,7 @@ commit:
 	$(MAKE) -C TheRouter commit
 	$(MAKE) -C ThePostOffice commit
 	$(MAKE) -C TheMaintainer commit
+	$(MAKE) -C TheNetworkAdapter commit
 	git add .
 	git commit -m "Updated main repository"
 	git push origin main
