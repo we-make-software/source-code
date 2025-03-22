@@ -37,6 +37,17 @@ What's next?
     <td>
       <strong>Role:</strong> TheMaintainer<br>
     </td>
+    </tr>
+    </tr>
+    <tr style="border: none;">
+    <td>
+      <img src="https://github.com/we-make-software/TheNetworkAdapter/blob/main/profile.png" alt="Worker Profile" width="150" 
+           style="border: 3px solid black; border-radius: 10px; padding: 5px;">
+    </td>
+    <td>
+      <strong>Role:</strong> : TheNetworkAdapter<br>
+    </td>
+  </tr>
   </tr>
     </tr>
     <tr style="border: none;">

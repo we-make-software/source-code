@@ -22,3 +22,7 @@
 [submodule "TheMaintainer"]
 	path = TheMaintainer
 	url = https://github.com/we-make-software/TheMaintainer.git
+[submodule "TheNetworkAdapter"]
+    path = TheNetworkAdapter
+    url = https://github.com/we-make-software/TheNetworkAdapter.git
+
