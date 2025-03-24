@@ -7,7 +7,6 @@ all:
 	$(MAKE) -C TheNetworkAdapter start
 	# $(MAKE) -C TheRouter start
 	$(MAKE) -C ThePostOffice start
-
 clean:
 	$(MAKE) -C ThePostOffice clean	
 	# $(MAKE) -C TheRouter clean
@@ -15,7 +14,6 @@ clean:
 	$(MAKE) -C TheMaintainer clean
 	$(MAKE) -C TheMailConditioner clean
 	$(MAKE) -C ExpiryWorkBase clean
-
 stop:
 	$(MAKE) -C ThePostOffice stop
 	# $(MAKE) -C TheRouter stop
@@ -24,13 +22,10 @@ stop:
 	$(MAKE) -C TheMailConditioner stop
 	$(MAKE) -C ExpiryWorkBase stop
 	make clean
-
 log:
 	dmesg -w
-
 clear:
 	dmesg -C
-
 pull:
 	$(MAKE) -C TheMailConditioner pull
 	$(MAKE) -C ThePostOffice pull
@@ -51,15 +46,15 @@ commit:
 	git add .
 	git commit -m "Updated main repository"
 	git push origin main
-
 new:
 	git submodule add https://github.com/we-make-software/$(name).git $(name)
 	make commit
 	echo '[submodule "$(name)"]\n\tpath = $(name)\n\turl = https://github.com/we-make-software/$(name).git' >> .gitmodules
-
 hard:
 	git push origin main --force
 
 restart:
-	@$(MAKE) clean
-	@sudo reboot	
+	make stop
+	make clean
+	make start
+	make log	
