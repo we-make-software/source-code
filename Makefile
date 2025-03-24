@@ -6,10 +6,10 @@ all:
 	$(MAKE) -C TheMaintainer start
 	$(MAKE) -C TheNetworkAdapter start
 	# $(MAKE) -C TheRouter start
-	# $(MAKE) -C ThePostOffice start
+	$(MAKE) -C ThePostOffice start
 
 clean:
-	# $(MAKE) -C ThePostOffice clean	
+	$(MAKE) -C ThePostOffice clean	
 	# $(MAKE) -C TheRouter clean
 	$(MAKE) -C TheNetworkAdapter clean
 	$(MAKE) -C TheMaintainer clean
@@ -17,7 +17,7 @@ clean:
 	$(MAKE) -C ExpiryWorkBase clean
 
 stop:
-	# $(MAKE) -C ThePostOffice stop
+	$(MAKE) -C ThePostOffice stop
 	# $(MAKE) -C TheRouter stop
 	$(MAKE) -C TheNetworkAdapter stop
 	$(MAKE) -C TheMaintainer stop
