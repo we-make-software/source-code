@@ -1,31 +1,31 @@
 [submodule "ExpiryWorkBase"]
-	path = ExpiryWorkBase
-	url = https://github.com/we-make-software/ExpiryWorkBase.git
-[submodule "ThePostOffice"]
-	path = ThePostOffice
-	url = https://github.com/we-make-software/ThePostOffice.git
-[submodule "TheRequirements"]
-	path = TheRequirements
-	url = https://github.com/we-make-software/TheRequirements.git
-[submodule "KernelTest"]
-	path = KernelTest
-	url = https://github.com/we-make-software/KernelTest.git
+    path = ExpiryWorkBase
+    url = https://github.com/we-make-software/ExpiryWorkBase.git
+
 [submodule "TheMailConditioner"]
-	path = TheMailConditioner
-	url = https://github.com/we-make-software/TheMailConditioner.git
-[submodule "KernelTest"]
-	path = KernelTest
-	url = https://github.com/we-make-software/KernelTest.
-[submodule "TheRouter"]
-	path = TheRouter
-	url = https://github.com/we-make-software/TheRouter.git
+    path = TheMailConditioner
+    url = https://github.com/we-make-software/TheMailConditioner.git
+
+[submodule "ThePostOffice"]
+    path = ThePostOffice
+    url = https://github.com/we-make-software/ThePostOffice.git
+
+[submodule "TheRequirements"]
+    path = TheRequirements
+    url = https://github.com/we-make-software/TheRequirements.git
+
 [submodule "TheMaintainer"]
-	path = TheMaintainer
-	url = https://github.com/we-make-software/TheMaintainer.git
+    path = TheMaintainer
+    url = https://github.com/we-make-software/TheMaintainer.git
+
+[submodule "TheRouter"]
+    path = TheRouter
+    url = https://github.com/we-make-software/TheRouter.git
+
 [submodule "TheNetworkAdapter"]
     path = TheNetworkAdapter
     url = https://github.com/we-make-software/TheNetworkAdapter.git
+
 [submodule "KernelDebugger"]
     path = KernelDebugger
     url = https://github.com/we-make-software/KernelDebugger.git
-
