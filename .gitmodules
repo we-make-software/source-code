@@ -25,4 +25,7 @@
 [submodule "TheNetworkAdapter"]
     path = TheNetworkAdapter
     url = https://github.com/we-make-software/TheNetworkAdapter.git
+[submodule "KernelDebugger"]
+    path = KernelDebugger
+    url = https://github.com/we-make-software/KernelDebugger.git
 
